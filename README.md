@@ -1,4 +1,3 @@
-# EmployeeManagementSystem
 # Employee Management System (Spring Boot + Maven)
 
 A clean, minimal CRUD API for managing employees.
