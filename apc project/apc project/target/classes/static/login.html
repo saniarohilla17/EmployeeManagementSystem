@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>EMS - Login</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+            font-weight: bold;
+        }
+        
+        input[type="text"], input[type="password"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+            box-sizing: border-box;
+        }
+        
+        input[type="text"]:focus, input[type="password"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .btn {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-bottom: 10px;
+            transition: transform 0.2s;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+            color: #333;
+        }
+        
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .error {
+            color: #e74c3c;
+            margin-bottom: 15px;
+            text-align: center;
+            padding: 10px;
+            background: #ffe6e6;
+            border-radius: 5px;
+        }
+        
+        .success {
+            color: #27ae60;
+            margin-bottom: 15px;
+            text-align: center;
+            padding: 10px;
+            background: #e8f5e8;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 id="formTitle">Employee Management System - Login</h1>
+        
+        <div id="message" class="error" style="display: none;"></div>
+        
+        <form id="authForm">
+            <div class="form-group">
+                <label for="username">Username:</label>
+                <input type="text" id="username" required minlength="3" maxlength="50">
+            </div>
+            
+            <div class="form-group">
+                <label for="password">Password:</label>
+                <input type="password" id="password" required minlength="4" maxlength="100">
+            </div>
+            
+            <button type="submit" class="btn" id="submitBtn">Login</button>
+            <button type="button" class="btn btn-secondary" id="toggleBtn">Register Instead</button>
+        </form>
+    </div>
+
+    <script>
+        let isLoginMode = true;
+        let isSubmitting = false;
+        let hasRedirectedOnce = false; // Prevent multiple redirects
+        
+        const form = document.getElementById('authForm');
+        const formTitle = document.getElementById('formTitle');
+        const submitBtn = document.getElementById('submitBtn');
+        const toggleBtn = document.getElementById('toggleBtn');
+        const message = document.getElementById('message');
+        const usernameInput = document.getElementById('username');
+        const passwordInput = document.getElementById('password');
+        
+        // Clear any existing auth when page loads to prevent loops
+        function clearStaleAuth() {
+            // Only clear if we're coming from a redirect or have a specific flag
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('clear') === 'true') {
+                console.log('Clearing stale authentication');
+                localStorage.removeItem('jwt');
+                localStorage.removeItem('username');
+                // Clean up URL
+                window.history.replaceState({}, document.title, window.location.pathname);
+            }
+        }
+        
+        // Toggle between login and register
+        toggleBtn.addEventListener('click', () => {
+            if (isSubmitting) return;
+            
+            isLoginMode = !isLoginMode;
+            if (isLoginMode) {
+                formTitle.textContent = 'Employee Management System - Login';
+                submitBtn.textContent = 'Login';
+                toggleBtn.textContent = 'Register Instead';
+            } else {
+                formTitle.textContent = 'Employee Management System - Register';
+                submitBtn.textContent = 'Register';
+                toggleBtn.textContent = 'Login Instead';
+            }
+            hideMessage();
+            form.reset();
+        });
+        
+        // Handle form submission
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            if (isSubmitting || hasRedirectedOnce) return;
+            
+            const username = usernameInput.value.trim();
+            const password = passwordInput.value;
+            
+            // Basic validation
+            if (username.length < 3) {
+                showMessage('Username must be at least 3 characters long', 'error');
+                return;
+            }
+            
+            if (password.length < 4) {
+                showMessage('Password must be at least 4 characters long', 'error');
+                return;
+            }
+            
+            isSubmitting = true;
+            submitBtn.disabled = true;
+            toggleBtn.disabled = true;
+            submitBtn.textContent = 'Processing...';
+            
+            const endpoint = isLoginMode ? '/api/auth/login' : '/api/auth/register';
+            
+            try {
+                console.log('Attempting', isLoginMode ? 'login' : 'register', 'for user:', username);
+                
+                const response = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username, password })
+                });
+                
+                const data = await response.json();
+                console.log('Auth response:', response.status, data);
+                
+                if (response.ok && data.token && data.username) {
+                    // Store JWT token and username
+                    localStorage.setItem('jwt', data.token);
+                    localStorage.setItem('username', data.username);
+                    
+                    showMessage(isLoginMode ? 'Login successful! Redirecting...' : 'Registration successful! Redirecting...', 'success');
+                    
+                    // Mark that we're about to redirect
+                    hasRedirectedOnce = true;
+                    
+                    // Redirect to main page after a short delay
+                    setTimeout(() => {
+                        console.log('Redirecting to main page');
+                        window.location.href = '/index.html';
+                    }, 2000);
+                } else {
+                    let errorMsg = 'Authentication failed';
+                    if (data && data.error) {
+                        errorMsg = data.error;
+                    } else if (data && data.message) {
+                        errorMsg = data.message;
+                    }
+                    showMessage(errorMsg, 'error');
+                    
+                    // Re-enable form
+                    isSubmitting = false;
+                    submitBtn.disabled = false;
+                    toggleBtn.disabled = false;
+                    submitBtn.textContent = isLoginMode ? 'Login' : 'Register';
+                }
+            } catch (error) {
+                console.error('Network error during authentication:', error);
+                showMessage('Network error. Please check your connection and try again.', 'error');
+                
+                // Re-enable form
+                isSubmitting = false;
+                submitBtn.disabled = false;
+                toggleBtn.disabled = false;
+                submitBtn.textContent = isLoginMode ? 'Login' : 'Register';
+            }
+        });
+        
+        function showMessage(text, type) {
+            message.textContent = text;
+            message.className = type;
+            message.style.display = 'block';
+            
+            // Auto-hide error messages after 5 seconds
+            if (type === 'error') {
+                setTimeout(() => {
+                    hideMessage();
+                }, 5000);
+            }
+        }
+        
+        function hideMessage() {
+            message.style.display = 'none';
+        }
+        
+        // Initialize page
+        clearStaleAuth();
+        usernameInput.focus();
+        
+        console.log('Login page loaded, hasRedirectedOnce:', hasRedirectedOnce);
+    </script>
+</body>
+</html>

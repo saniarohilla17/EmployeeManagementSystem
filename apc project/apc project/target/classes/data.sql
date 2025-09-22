@@ -1,0 +1,15 @@
+---- INSERT INTO employees (id, name, email, designation, department, phone, salary, created_at, updated_at) VALUES
+----  (1, 'Aarav Sharma', 'aarav.sharma@example.com', 'Software Engineer', 'IT', '9876543210', 900000, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+----  (2, 'Isha Verma', 'isha.verma@example.com', 'HR Manager', 'HR', '9876543211', 1200000, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+--
+--
+---- Insert default admin user (password: admin123)
+--INSERT INTO users (id, username, password, created_at) VALUES
+-- (1, 'admin', '$2a$10$N9qo8uLOickgx2ZMRZoMye1p1R7g.Qs1.EkD4Dm7L7/M2z9WFw4o2', CURRENT_TIMESTAMP);
+--
+---- Insert sample employees
+--INSERT INTO employees (id, name, email, designation, department, phone, salary, created_at, updated_at) VALUES
+-- (1, 'Aarav Sharma', 'aarav.sharma@example.com', 'Software Engineer', 'IT', '9876543210', 900000, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+-- (2, 'Isha Verma', 'isha.verma@example.com', 'HR Manager', 'HR', '9876543211', 1200000, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+-- (3, 'Rohan Patel', 'rohan.patel@example.com', 'Backend Developer', 'IT', '9876543212', 800000, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+-- (4, 'Priya Singh', 'priya.singh@example.com', 'UI/UX Designer', 'Design', '9876543213', 700000, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
